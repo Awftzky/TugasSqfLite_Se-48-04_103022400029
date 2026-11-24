@@ -45,4 +45,10 @@ Gambar berikut menjadi acuan visual aplikasi:
 
 Berikut dokumentasi tampilan aplikasi saat persediaan masih kosong dan saat material sudah tercatat:
 
+### Persediaan Kosong
 
+![Tampilan aplikasi tanpa material](docs/app_ui/no_material.png)
+
+### Persediaan Berisi Material
+
+![Tampilan aplikasi dengan material tercatat](docs/app_ui/exist_material.png)
