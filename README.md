@@ -1,4 +1,4 @@
-# Aplikasi Persediaan
+# Supply_App 
 
 ## Deskripsi Aplikasi
 
@@ -18,7 +18,6 @@ Aplikasi satu halaman untuk mencatat dan memantau persediaan material. Data mate
 - sqflite (`^2.4.6`) untuk penyimpanan SQLite lokal.
 - path (`^1.9.1`) untuk menyusun lokasi berkas basis data.
 - cupertino_icons (`^1.0.8`) tercantum sebagai dependensi ikon.
-- Dependensi pengembangan: `flutter_test` dan `flutter_lints` (`^6.0.0`).
 
 ## Cara Menjalankan Aplikasi
 
@@ -46,10 +45,4 @@ Gambar berikut menjadi acuan visual aplikasi:
 
 Berikut dokumentasi tampilan aplikasi saat persediaan masih kosong dan saat material sudah tercatat:
 
-### Persediaan Kosong
 
-![Tampilan aplikasi tanpa material](docs/app_ui/no_material.png)
-
-### Persediaan Berisi Material
-
-![Tampilan aplikasi dengan material tercatat](docs/app_ui/exist_material.png)
