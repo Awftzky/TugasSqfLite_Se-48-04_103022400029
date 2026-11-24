@@ -39,7 +39,7 @@ Aplikasi satu halaman untuk mencatat dan memantau persediaan material. Data mate
 
 Gambar berikut menjadi acuan visual aplikasi:
 
-![Gambar referensi visual aplikasi](docs/reference/App_Reference.png)
+<img src="docs/reference/App_Reference.png" alt="Gambar referensi visual aplikasi" width="300" />
 
 ## Dokumentasi UI Aplikasi
 
@@ -47,8 +47,8 @@ Berikut dokumentasi tampilan aplikasi saat persediaan masih kosong dan saat mate
 
 ### Persediaan Kosong
 
-![Tampilan aplikasi tanpa material](docs/app_ui/no_material.png)
+<img src="docs/app_ui/no_material.png" alt="Tampilan aplikasi tanpa material" width="280" />
 
 ### Persediaan Berisi Material
 
-![Tampilan aplikasi dengan material tercatat](docs/app_ui/exist_material.png)
+<img src="docs/app_ui/exist_material.png" alt="Tampilan aplikasi dengan material tercatat" width="280" />
