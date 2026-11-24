@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../data/model/item.dart';
 import '../controllers/home_controller.dart';
+import '../controllers/material_form_controller.dart';
 import 'widgets/delete_item_dialog.dart';
 import 'widgets/home_header.dart';
 import 'widgets/inventory_section.dart';
@@ -30,14 +31,14 @@ class HomeView extends GetView<HomeController> {
             ),
             InventorySection(
               controller: controller,
-              onEdit: (item) => _showItemForm(context, item: item),
+              onEdit: (item) => _showItemForm(item: item),
               onDelete: (item) => _confirmDelete(context, item),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showItemForm(context),
+        onPressed: () => _showItemForm(),
         backgroundColor: _purple,
         foregroundColor: Colors.white,
         elevation: 5,
@@ -50,12 +51,13 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Future<void> _showItemForm(BuildContext context, {Item? item}) async {
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (_) =>
-          MaterialFormDialog(item: item, onSave: controller.saveItem),
+  Future<void> _showItemForm({Item? item}) async {
+    Get.find<MaterialFormController>().prepare(item);
+    final saved = await Get.dialog<bool>(
+      const MaterialFormDialog(),
+      barrierDismissible: false,
     );
+
     if (saved == true) {
       _showMessage(
         item == null ? 'Material ditambahkan' : 'Perubahan disimpan',

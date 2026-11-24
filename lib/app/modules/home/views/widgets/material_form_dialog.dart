@@ -1,56 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-import '../../../../data/model/item.dart';
+import '../../controllers/material_form_controller.dart';
 
 const _purple = Color(0xFF8537FE);
 const _ink = Color(0xFF211B2C);
 const _muted = Color(0xFF898393);
 const _line = Color(0xFFECE9F1);
 
-typedef SaveItemCallback =
-    Future<bool> Function({Item? existing, required Item item});
-
-class MaterialFormDialog extends StatefulWidget {
-  const MaterialFormDialog({super.key, this.item, required this.onSave});
-
-  final Item? item;
-  final SaveItemCallback onSave;
-
-  @override
-  State<MaterialFormDialog> createState() => _MaterialFormDialogState();
-}
-
-class _MaterialFormDialogState extends State<MaterialFormDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late final _nameController = TextEditingController(
-    text: widget.item?.name ?? '',
-  );
-  late final _categoryController = TextEditingController(
-    text: widget.item?.category ?? '',
-  );
-  late final _quantityController = TextEditingController(
-    text: widget.item == null ? '' : _formatQuantity(widget.item!.quantity),
-  );
-  late final _unitController = TextEditingController(
-    text: widget.item?.unit ?? '',
-  );
-  late final _locationController = TextEditingController(
-    text: widget.item?.location ?? '',
-  );
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _categoryController.dispose();
-    _quantityController.dispose();
-    _unitController.dispose();
-    _locationController.dispose();
-    super.dispose();
-  }
+class MaterialFormDialog extends GetView<MaterialFormController> {
+  const MaterialFormDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final item = widget.item;
+    final item = controller.existing;
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -59,7 +22,7 @@ class _MaterialFormDialogState extends State<MaterialFormDialog> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
           child: Form(
-            key: _formKey,
+            key: controller.formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,17 +65,21 @@ class _MaterialFormDialogState extends State<MaterialFormDialog> {
                         ],
                       ),
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      icon: const Icon(Icons.close_rounded),
-                      color: _muted,
-                      visualDensity: VisualDensity.compact,
+                    Obx(
+                      () => IconButton(
+                        onPressed: controller.isSaving.value
+                            ? null
+                            : controller.close,
+                        icon: const Icon(Icons.close_rounded),
+                        color: _muted,
+                        visualDensity: VisualDensity.compact,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
                 _FormField(
-                  controller: _nameController,
+                  controller: controller.nameController,
                   label: 'Nama material',
                   hint: 'Contoh: Semen OPC 43',
                   icon: Icons.inventory_2_outlined,
@@ -121,7 +88,7 @@ class _MaterialFormDialogState extends State<MaterialFormDialog> {
                 ),
                 const SizedBox(height: 13),
                 _FormField(
-                  controller: _categoryController,
+                  controller: controller.categoryController,
                   label: 'Kategori',
                   hint: 'Contoh: Semen, Baja, Kelistrikan',
                   icon: Icons.category_outlined,
@@ -135,29 +102,21 @@ class _MaterialFormDialogState extends State<MaterialFormDialog> {
                     Expanded(
                       flex: 3,
                       child: _FormField(
-                        controller: _quantityController,
+                        controller: controller.quantityController,
                         label: 'Jumlah',
                         hint: '0',
                         icon: Icons.numbers_rounded,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        validator: (value) {
-                          final quantity = double.tryParse(value?.trim() ?? '');
-                          if (quantity == null ||
-                              !quantity.isFinite ||
-                              quantity < 0) {
-                            return 'Masukkan jumlah yang valid';
-                          }
-                          return null;
-                        },
+                        validator: _quantityValidator,
                       ),
                     ),
                     const SizedBox(width: 11),
                     Expanded(
                       flex: 2,
                       child: _FormField(
-                        controller: _unitController,
+                        controller: controller.unitController,
                         label: 'Satuan',
                         hint: 'Karung',
                         icon: Icons.straighten_rounded,
@@ -169,7 +128,7 @@ class _MaterialFormDialogState extends State<MaterialFormDialog> {
                 ),
                 const SizedBox(height: 13),
                 _FormField(
-                  controller: _locationController,
+                  controller: controller.locationController,
                   label: 'Lokasi penyimpanan',
                   hint: 'Contoh: Gudang Utama',
                   icon: Icons.location_on_outlined,
@@ -180,33 +139,51 @@ class _MaterialFormDialogState extends State<MaterialFormDialog> {
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _ink,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(color: _line),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(13),
+                      child: Obx(
+                        () => OutlinedButton(
+                          onPressed: controller.isSaving.value
+                              ? null
+                              : controller.close,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _ink,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: const BorderSide(color: _line),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(13),
+                            ),
                           ),
+                          child: const Text('Batal'),
                         ),
-                        child: const Text('Batal'),
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: FilledButton(
-                        onPressed: _save,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _purple,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(13),
+                      child: Obx(
+                        () => FilledButton(
+                          onPressed: controller.isSaving.value
+                              ? null
+                              : controller.save,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _purple,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(13),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          item == null ? 'Simpan material' : 'Simpan perubahan',
+                          child: controller.isSaving.value
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  item == null
+                                      ? 'Simpan material'
+                                      : 'Simpan perubahan',
+                                ),
                         ),
                       ),
                     ),
@@ -219,28 +196,17 @@ class _MaterialFormDialogState extends State<MaterialFormDialog> {
       ),
     );
   }
+}
 
-  Future<void> _save() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    final saved = await widget.onSave(
-      existing: widget.item,
-      item: Item(
-        id: widget.item?.id,
-        name: _nameController.text.trim(),
-        category: _categoryController.text.trim(),
-        quantity: double.parse(_quantityController.text.trim()),
-        unit: _unitController.text.trim(),
-        location: _locationController.text.trim(),
-      ),
-    );
-    if (saved && mounted) Navigator.of(context).pop(true);
+String? _requiredValidator(String? value) =>
+    value == null || value.trim().isEmpty ? 'Wajib diisi' : null;
+
+String? _quantityValidator(String? value) {
+  final quantity = double.tryParse(value?.trim() ?? '');
+  if (quantity == null || !quantity.isFinite || quantity < 0) {
+    return 'Masukkan jumlah yang valid';
   }
-
-  String? _requiredValidator(String? value) =>
-      value == null || value.trim().isEmpty ? 'Wajib diisi' : null;
-
-  String _formatQuantity(double quantity) =>
-      quantity.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
+  return null;
 }
 
 class _FormField extends StatelessWidget {
